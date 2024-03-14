@@ -6,6 +6,10 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
   get '/hello', to: 'application#hello_world'
 
+  get '*path',
+      to: 'fallback#index',
+      constraints: ->(req) { !req.xhr? && req.format.html? }
+
   # Defines the root path route ("/")
   # root "posts#index"
 end
