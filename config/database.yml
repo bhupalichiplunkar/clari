@@ -79,6 +79,4 @@ test:
 #
 production:
   <<: *default
-  database: clarisights_dummy_production
-  username: clarisights_dummy
-  password: <%= ENV["CLARISIGHTS_DUMMY_DATABASE_PASSWORD"] %>
+  url: <%= ENV['DATABASE_URL'] %>
