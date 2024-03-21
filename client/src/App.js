@@ -1,29 +1,76 @@
-// client/src/components/App.js
-import { useState, useEffect } from "react";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
+import { ConfigProvider } from "antd";
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import Registration from "./pages/Registration";
+import { useState } from "react";
 
 function App() {
-  const [count, setCount] = useState(0);
+  let localUser = null;
+  try {
+    localUser = localStorage.getItem("user")
+      ? JSON.parse(localStorage.getItem("user"))
+      : null;
+  } catch (d) {
+    localUser = null;
+  }
 
-  useEffect(() => {
-    fetch("/hello")
-      .then((r) => r.json())
-      .then((data) => setCount(data.count));
-  }, []);
+  const [appState, setAppstate] = useState({
+    user: localUser,
+  });
+
+  const setUserAuthDetails = (user) => {
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
+    }
+    setAppstate({ user });
+  };
 
   return (
-    <BrowserRouter>
-      <div className="App">
+    <ConfigProvider
+      theme={{
+        token: {
+          // Seed Token
+          colorPrimary: "#00b96b",
+          borderRadius: 2,
+
+          // Alias Token
+          colorBgContainer: "#f6ffed",
+        },
+      }}
+    >
+      <BrowserRouter>
         <Switch>
-          <Route path="/testing">
-            <h1>Test Route</h1>
-          </Route>
-          <Route path="/">
-            <h1>Page Count: {count}</h1>
-          </Route>
+          <Route
+            exact
+            path="/"
+            render={(props) => (
+              <Dashboard
+                {...props}
+                user={appState.user}
+                setUserAuthDetails={setUserAuthDetails}
+              />
+            )}
+          />
+          <Route
+            path="/login"
+            render={(props) => (
+              <Login
+                {...props}
+                user={appState.user}
+                setUserAuthDetails={setUserAuthDetails}
+              />
+            )}
+          />
+          <Route
+            path="/registration"
+            render={(props) => <Registration {...props} user={appState.user} />}
+          />
         </Switch>
-      </div>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ConfigProvider>
   );
 }
 
