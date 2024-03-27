@@ -47,3 +47,5 @@ end
 
 
 gem "active_model_serializers", "~> 0.10.14"
+
+gem 'facebookbusiness'

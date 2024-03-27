@@ -1,0 +1,6 @@
+{
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "modificationsIfAvailable",
+    "editor.wrappingStrategy": "simple",
+    "editor.wordWrap": "on"
+}
