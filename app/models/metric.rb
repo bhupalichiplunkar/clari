@@ -1,0 +1,3 @@
+class Metric < ApplicationRecord
+    
+end

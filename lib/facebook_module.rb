@@ -6,7 +6,7 @@ module FacebookModule
     GRAPH_API_BASE_URL = "https://graph.facebook.com/v19.0"
     FB_TOKEN = "EAAKDX99BZAz4BO8ffukd0RStBQCDLETZBXpSg1gU3JZBhZCEcS7zpn00WsePn6PwyrPfHdN5Iktk3stmfJgLhz9NI5s0VZCwvrFSzom7i6r9tQKWB3hSEAMPoZAtZB7do2nw2UzwpfkZCoxMAHM6hiLRpUFXWYISSXZAd5fi9KvaSZA3BkmZAbgEOUFM0VdUOj8CTBz"
     TIME_RANGE =  "{'since':'2024-01-21','until':'2024-03-23'}"
-    LIMIT = 1000
+    LIMIT = 10000
 
     def get_accounts
         begin

@@ -13,7 +13,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   get "fetch-accounts", to: "facebook#fetch_accounts"
-
+  
   get "fetch_campaigns/:account_id", to: "facebook#fetch_campaigns"
 
   get "fetch_adsets/:campaign_id", to: "facebook#fetch_adsets"
