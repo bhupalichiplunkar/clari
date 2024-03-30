@@ -26,12 +26,12 @@ ActiveRecord::Schema[7.1].define(version: 2024_03_27_053210) do
   create_table "ads", force: :cascade do |t|
     t.bigint "fb_ad_id"
     t.string "ad_name"
-    t.text "landing_page"
+    t.string "landing_page"
     t.string "ad_type"
     t.string "ad_format"
     t.datetime "start_date"
-    t.text "facebook_post"
-    t.text "instagram_post"
+    t.string "facebook_post"
+    t.string "instagram_post"
     t.bigint "adset_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

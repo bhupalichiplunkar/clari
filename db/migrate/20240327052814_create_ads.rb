@@ -3,12 +3,12 @@ class CreateAds < ActiveRecord::Migration[7.1]
     create_table :ads do |t|
       t.bigint :fb_ad_id
       t.string :ad_name
-      t.text :landing_page
+      t.string :landing_page
       t.string :ad_type
       t.string :ad_format
       t.datetime :start_date
-      t.text :facebook_post
-      t.text :instagram_post
+      t.string :facebook_post
+      t.string :instagram_post
       t.bigint :adset_id
       t.timestamps
     end
