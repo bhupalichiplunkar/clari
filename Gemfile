@@ -50,3 +50,5 @@ gem "active_model_serializers", "~> 0.10.14"
 
 gem 'sidekiq'
 
+
+gem "pagy", "~> 7.0"

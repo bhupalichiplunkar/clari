@@ -10,6 +10,14 @@ Rails.application.routes.draw do
 
   resources :registrations, only: [:create]
 
+  resources :accounts, only: [:index]
+
+  resources :campaigns, only: [:index]
+
+  resources :adsets, only: [:index]
+
+  resources :ads, only: [:index]
+
   delete :logout, to: "sessions#logout"
 
   get :logged_in, to: "sessions#logged_in"

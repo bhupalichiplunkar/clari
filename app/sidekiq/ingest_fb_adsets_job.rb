@@ -5,6 +5,7 @@ class IngestFbAdsetsJob
   include FacebookModule
 
   def perform(*args)
-    fetch_all_adsets
+    # fetch_all_adsets
+    fetch_all_adsets_metrics
   end
 end

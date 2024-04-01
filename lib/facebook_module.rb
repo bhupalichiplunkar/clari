@@ -94,15 +94,15 @@ module FacebookModule
         end
     end
 
-    def get_metrics(level, id, after=nil)
+    def get_metrics(level, id, fields="", time_range = TIME_RANGE)
         begin
-            fields = "clicks,campaign_id, campaign_name, date_start, ctr, inline_link_clicks, inline_link_click_ctr, cost_per_unique_inline_link_click, impressions, spend, full_view_impressions, conversions"
+            fields = "clicks, date_start, ctr, inline_link_clicks, inline_link_click_ctr, cost_per_unique_inline_link_click, impressions, spend, full_view_impressions, actions#{fields.size > 0 ? ',' + fields : ''}"
+
             time_increment = 1
-            summary = "action_values"
 
             uri = URI("#{GRAPH_API_BASE_URL}/#{id}/insights")
 
-            params = { :access_token => FB_TOKEN, :fields => fields, :time_range => TIME_RANGE, :limit => LIMIT, :time_increment => time_increment, :summary => summary, :level => level, :after => after }
+            params = { :access_token => FB_TOKEN, :fields => fields, :time_range => time_range, :limit => LIMIT, :time_increment => time_increment, :level => level}
 
             uri.query = URI.encode_www_form(params)
 
@@ -313,6 +313,241 @@ module FacebookModule
         rescue StandardError => error
             p "=========>", error
             p "Failed to fetch ads"
+        end
+    end
+
+    def get_comments_metric(data)
+        action = data["actions"].find do |action|
+            action["action_type"] = "comment"
+        end
+        !action.nil? && !action["value"].blank? ? action["value"].to_i : 0
+    end
+
+    def get_likes_metric(data)
+        action = data["actions"].find do |action|
+            action["action_type"] = "post_reaction"
+        end
+        !action.nil? && !action["value"].blank? ? action["value"].to_i : 0
+    end
+
+    def get_lpv_metric(data)
+        action = data["actions"].find do |action|
+            action["action_type"] = "landing_page_viewxx"
+        end
+        !action.nil? && !action["value"].blank? ? action["value"].to_i : 0
+    end
+
+    def get_installs_metric(data)
+        value = data["actions"].sum do |action|
+            if (action["action_type"].include?("install"))
+                action["value"].to_i 
+            else
+                0
+            end
+        end
+        value
+    end
+
+    def get_video_plays_metric(data)
+        action = data["actions"].find do |action|
+            action["action_type"] = "video_view"
+        end
+        !action.nil? && !action["value"].blank? ? action["value"].to_i : 0
+    end
+
+    def extract_and_save_account_metrics(day_wise_metrics)
+        begin
+            day_wise_metrics.each do |day_metric|
+                Metric.find_or_create_by(account_id: day_metric["account_id"], attr_date: day_metric["date_start"]) do |metric|
+                    metric.all_clicks = day_metric["clicks"]
+                    metric.all_ctr = day_metric["ctr"]
+                    metric.link_clicks = day_metric["inline_link_clicks"]
+                    metric.ctr_link_clicks = day_metric["inline_link_click_ctr"]
+                    metric.cplc = day_metric["cost_per_unique_inline_link_click"]
+                    metric.comments = get_comments_metric(day_metric)
+                    metric.impressions = day_metric["impressions"]
+                    metric.likes = get_likes_metric(day_metric)
+                    metric.spend = day_metric["spend"]
+                    metric.landing_page_views = get_lpv_metric(day_metric)
+                    metric.mobile_app_installs = get_installs_metric(day_metric)
+                    metric.video_plays = get_video_plays_metric(day_metric)
+                end
+            end
+        rescue StandardError => e
+            p e 
+            p "something went wrong"
+        end 
+    end
+
+    def extract_and_save_campaign_metrics(day_wise_metrics)
+        begin
+            day_wise_metrics.each do |day_metric|
+                Metric.find_or_create_by(account_id: day_metric["account_id"],campaign_id: day_metric["campaign_id"], attr_date: day_metric["date_start"]) do |metric|
+                    metric.all_clicks = day_metric["clicks"]
+                    metric.all_ctr = day_metric["ctr"]
+                    metric.link_clicks = day_metric["inline_link_clicks"]
+                    metric.ctr_link_clicks = day_metric["inline_link_click_ctr"]
+                    metric.cplc = day_metric["cost_per_unique_inline_link_click"]
+                    metric.comments = get_comments_metric(day_metric)
+                    metric.impressions = day_metric["impressions"]
+                    metric.likes = get_likes_metric(day_metric)
+                    metric.spend = day_metric["spend"]
+                    metric.landing_page_views = get_lpv_metric(day_metric)
+                    metric.mobile_app_installs = get_installs_metric(day_metric)
+                    metric.video_plays = get_video_plays_metric(day_metric)
+                end
+            end
+        rescue StandardError => e
+            p e 
+            p "something went wrong"
+        end 
+    end
+
+    def extract_and_save_adset_metrics(day_wise_metrics)
+        begin
+            day_wise_metrics.each do |day_metric|
+                Metric.find_or_create_by(account_id: day_metric["account_id"],campaign_id: day_metric["campaign_id"],adset_id: day_metric["adset_id"], attr_date: day_metric["date_start"]) do |metric|
+                    metric.all_clicks = day_metric["clicks"]
+                    metric.all_ctr = day_metric["ctr"]
+                    metric.link_clicks = day_metric["inline_link_clicks"]
+                    metric.ctr_link_clicks = day_metric["inline_link_click_ctr"]
+                    metric.cplc = day_metric["cost_per_unique_inline_link_click"]
+                    metric.comments = get_comments_metric(day_metric)
+                    metric.impressions = day_metric["impressions"]
+                    metric.likes = get_likes_metric(day_metric)
+                    metric.spend = day_metric["spend"]
+                    metric.landing_page_views = get_lpv_metric(day_metric)
+                    metric.mobile_app_installs = get_installs_metric(day_metric)
+                    metric.video_plays = get_video_plays_metric(day_metric)
+                end
+            end
+        rescue StandardError => e
+            p e 
+            p "something went wrong"
+        end 
+    end
+
+    def extract_and_save_ad_metrics(day_wise_metrics)
+        begin
+            day_wise_metrics.each do |day_metric|
+                Metric.find_or_create_by(account_id: day_metric["account_id"],campaign_id: day_metric["campaign_id"],adset_id: day_metric["adset_id"], ad_id: day_metric["ad_id"], attr_date: day_metric["date_start"]) do |metric|
+                    metric.all_clicks = day_metric["clicks"]
+                    metric.all_ctr = day_metric["ctr"]
+                    metric.link_clicks = day_metric["inline_link_clicks"]
+                    metric.ctr_link_clicks = day_metric["inline_link_click_ctr"]
+                    metric.cplc = day_metric["cost_per_unique_inline_link_click"]
+                    metric.comments = get_comments_metric(day_metric)
+                    metric.impressions = day_metric["impressions"]
+                    metric.likes = get_likes_metric(day_metric)
+                    metric.spend = day_metric["spend"]
+                    metric.landing_page_views = get_lpv_metric(day_metric)
+                    metric.mobile_app_installs = get_installs_metric(day_metric)
+                    metric.video_plays = get_video_plays_metric(day_metric)
+                end
+            end
+        rescue StandardError => e
+            p e 
+            p "something went wrong"
+        end 
+    end
+
+    def fetch_all_account_metrics
+        begin
+            Account.in_batches.each do |accounts|
+                accounts.each do |account|
+                    account_id = account["fb_account_string"]
+                    fk_account_id = account["id"]
+                    # p "starting for #{fk_account_id}, #{account_id}"
+                    response = get_metrics("account", account_id, "account_id")
+                    # p "=====>" , response
+                    if response.class == Hash && response.key?('data') && response["data"] != nil
+                        data = extract_and_save_account_metrics(response["data"])
+                        # p "================================>>>>>>>>>> day count = #{response["data"].size}"
+                    else 
+                        # p "No metrics for account #{account_id}"
+                    end
+                    # p "ending for #{fk_account_id}, #{account_id}"
+                end
+            end 
+            # p "Successfully fetched account metrics"
+        rescue StandardError => error
+            p "=========>", error
+            # p "Failed to fetched account metrics"
+        end
+    end
+
+    def fetch_all_campaigns_metrics
+        begin
+            Campaign.in_batches.each do |campaigns|
+                campaigns.each do |campaign|
+                    campaign_id = campaign["fb_campaign_id"]
+                    fk_campaign_id = campaign["id"]
+                    # p "starting for #{fk_campaign_id}, #{campaign_id}"
+                    response = get_metrics("campaign", campaign_id, "account_id, campaign_id")
+                    # p "=====>" , response
+                    if response.class == Hash && response.key?('data') && response["data"] != nil
+                        data = extract_and_save_campaign_metrics(response["data"])
+                        # p "================================>>>>>>>>>> day count = #{response["data"].size}"
+                    else 
+                        # p "No metrics for campaign #{campaign_id}"
+                    end
+                    # p "ending for #{fk_campaign_id}, #{campaign_id}"
+                end
+            end 
+            # p "Successfully fetched campaign metrics"
+        rescue StandardError => error
+            p "=========>", error
+            # p "Failed to fetched campaign metrics"
+        end
+    end
+
+    def fetch_all_adsets_metrics
+        begin
+            Adset.in_batches.each do |adsets|
+                adsets.each do |adset|
+                    adset_id = adset["fb_adset_id"]
+                    fk_adset_id = adset["id"]
+                    p "starting for #{fk_adset_id}, #{adset_id}"
+                    response = get_metrics("adset", adset_id, "account_id, campaign_id, adset_id")
+                    p "=====>" , response
+                    if response.class == Hash && response.key?('data') && response["data"] != nil
+                        data = extract_and_save_adset_metrics(response["data"])
+                        p "================================>>>>>>>>>> day count = #{response["data"].size}"
+                    else 
+                        p "No metrics for adset #{adset_id}"
+                    end
+                    p "ending for #{fk_adset_id}, #{adset_id}"
+                end
+            end 
+            p "Successfully fetched adset metrics"
+        rescue StandardError => error
+            p "=========>", error
+            p "Failed to fetched adset metrics"
+        end
+    end
+
+    def fetch_all_ads_metrics
+        begin
+            Ad.in_batches.each do |ads|
+                ads.each do |ad|
+                    ad_id = ad["fb_ad_id"]
+                    fk_ad_id = ad["id"]
+                    p "starting for #{fk_ad_id}, #{ad_id}"
+                    response = get_metrics("ad", ad_id, "account_id, campaign_id, adset_id, ad_id")
+                    p "=====>" , response
+                    if response.class == Hash && response.key?('data') && response["data"] != nil
+                        data = extract_and_save_ad_metrics(response["data"])
+                        p "================================>>>>>>>>>> day count = #{response["data"].size}"
+                    else 
+                        p "No metrics for ad #{ad_id}"
+                    end
+                    p "ending for #{fk_ad_id}, #{ad_id}"
+                end
+            end 
+            p "Successfully fetched ad metrics"
+        rescue StandardError => error
+            p "=========>", error
+            p "Failed to fetched ad metrics"
         end
     end
 end

@@ -1,9 +1,12 @@
 import { BrowserRouter, Switch, Route } from "react-router-dom";
+import { createStore, Provider } from "jotai";
 import { ConfigProvider } from "antd";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Registration from "./pages/Registration";
 import { useState } from "react";
+
+const store = createStore();
 
 function App() {
   let localUser = null;
@@ -29,48 +32,65 @@ function App() {
   };
 
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          // Seed Token
-          colorPrimary: "#00b96b",
-          borderRadius: 2,
+    <Provider store={store}>
+      <ConfigProvider
+        theme={{
+          token: {
+            // Seed Token
+            colorPrimary: "#00b96b",
+            borderRadius: 2,
 
-          // Alias Token
-          colorBgContainer: "#f6ffed",
-        },
-      }}
-    >
-      <BrowserRouter>
-        <Switch>
-          <Route
-            exact
-            path="/"
-            render={(props) => (
-              <Dashboard
-                {...props}
-                user={appState.user}
-                setUserAuthDetails={setUserAuthDetails}
-              />
-            )}
-          />
-          <Route
-            path="/login"
-            render={(props) => (
-              <Login
-                {...props}
-                user={appState.user}
-                setUserAuthDetails={setUserAuthDetails}
-              />
-            )}
-          />
-          <Route
-            path="/registration"
-            render={(props) => <Registration {...props} user={appState.user} />}
-          />
-        </Switch>
-      </BrowserRouter>
-    </ConfigProvider>
+            // Alias Token
+            colorBgContainer: "#f6ffed",
+          },
+        }}
+      >
+        <BrowserRouter>
+          <Switch>
+            <Route
+              exact
+              path="/"
+              render={(props) => (
+                <Dashboard
+                  {...props}
+                  key="home"
+                  user={appState.user}
+                  setUserAuthDetails={setUserAuthDetails}
+                />
+              )}
+            />
+            <Route
+              path="/login"
+              render={(props) => (
+                <Login
+                  {...props}
+                  user={appState.user}
+                  setUserAuthDetails={setUserAuthDetails}
+                />
+              )}
+            />
+            <Route
+              path="/registration"
+              render={(props) => (
+                <Registration {...props} user={appState.user} />
+              )}
+            />
+            <Route
+              path="/see-all/:dataLevel"
+              exact
+              render={(props) => (
+                <Dashboard
+                  key="see-all"
+                  {...props}
+                  user={appState.user}
+                  setUserAuthDetails={setUserAuthDetails}
+                />
+              )}
+            />
+          </Switch>
+        </BrowserRouter>
+      </ConfigProvider>
+    </Provider>
   );
 }
 
