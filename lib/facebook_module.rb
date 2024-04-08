@@ -115,7 +115,7 @@ module FacebookModule
                 return res.body
             end 
         rescue 
-            return "Something went wrong while fetching metrics for #{level}, #{id}, page after #{after}"
+            return "Something went wrong while fetching metrics for #{level}, #{id}"
         end
     end
 
@@ -355,10 +355,38 @@ module FacebookModule
         !action.nil? && !action["value"].blank? ? action["value"].to_i : 0
     end
 
-    def extract_and_save_account_metrics(day_wise_metrics)
+    def extract_and_save_account_metrics(day_wise_metrics, pk)
         begin
             day_wise_metrics.each do |day_metric|
-                Metric.find_or_create_by(account_id: day_metric["account_id"], attr_date: day_metric["date_start"]) do |metric|
+                p pk
+                Metric.find_or_create_by(account_id: pk, attr_date: day_metric["date_start"]) do |metric|
+                    metric.all_clicks = day_metric["clicks"]
+                    metric.all_ctr = day_metric["ctr"]
+                    metric.link_clicks = day_metric["inline_link_clicks"]
+                    metric.ctr_link_clicks = day_metric["inline_link_click_ctr"]
+                    metric.cplc = day_metric["cost_per_unique_inline_link_click"]
+                    metric.comments = get_comments_metric(day_metric)
+                    metric.impressions = day_metric["impressions"]
+                    metric.likes = get_likes_metric(day_metric)
+                    metric.spend = day_metric["spend"]
+                    metric.landing_page_views = get_lpv_metric(day_metric)
+                    metric.mobile_app_installs = get_installs_metric(day_metric)
+                    metric.video_plays = get_video_plays_metric(day_metric)
+                    metric.revenue = 0
+                    metric.save
+                end
+            end
+        rescue StandardError => e
+            p e 
+            p "something went wrong"
+        end 
+    end
+
+    def extract_and_save_campaign_metrics(day_wise_metrics, pk)
+        begin
+            day_wise_metrics.each do |day_metric|
+                act_id = Account.where("fb_account_id = '#{day_metric["account_id"]}'").pluck(:id).first
+                Metric.find_or_create_by(account_id: act_id ,campaign_id: pk, attr_date: day_metric["date_start"]) do |metric|
                     metric.all_clicks = day_metric["clicks"]
                     metric.all_ctr = day_metric["ctr"]
                     metric.link_clicks = day_metric["inline_link_clicks"]
@@ -379,10 +407,12 @@ module FacebookModule
         end 
     end
 
-    def extract_and_save_campaign_metrics(day_wise_metrics)
+    def extract_and_save_adset_metrics(day_wise_metrics, pk)
         begin
             day_wise_metrics.each do |day_metric|
-                Metric.find_or_create_by(account_id: day_metric["account_id"],campaign_id: day_metric["campaign_id"], attr_date: day_metric["date_start"]) do |metric|
+                act_id = Account.where("fb_account_id = '#{day_metric["account_id"]}'").pluck(:id).first
+                cam_id = Campaign.where("fb_campaign_id = '#{day_metric["campaign_id"]}'").pluck(:id).first
+                Metric.find_or_create_by(account_id: act_id,campaign_id: cam_id,adset_id: pk, attr_date: day_metric["date_start"]) do |metric|
                     metric.all_clicks = day_metric["clicks"]
                     metric.all_ctr = day_metric["ctr"]
                     metric.link_clicks = day_metric["inline_link_clicks"]
@@ -403,34 +433,13 @@ module FacebookModule
         end 
     end
 
-    def extract_and_save_adset_metrics(day_wise_metrics)
+    def extract_and_save_ad_metrics(day_wise_metrics, pk)
         begin
             day_wise_metrics.each do |day_metric|
-                Metric.find_or_create_by(account_id: day_metric["account_id"],campaign_id: day_metric["campaign_id"],adset_id: day_metric["adset_id"], attr_date: day_metric["date_start"]) do |metric|
-                    metric.all_clicks = day_metric["clicks"]
-                    metric.all_ctr = day_metric["ctr"]
-                    metric.link_clicks = day_metric["inline_link_clicks"]
-                    metric.ctr_link_clicks = day_metric["inline_link_click_ctr"]
-                    metric.cplc = day_metric["cost_per_unique_inline_link_click"]
-                    metric.comments = get_comments_metric(day_metric)
-                    metric.impressions = day_metric["impressions"]
-                    metric.likes = get_likes_metric(day_metric)
-                    metric.spend = day_metric["spend"]
-                    metric.landing_page_views = get_lpv_metric(day_metric)
-                    metric.mobile_app_installs = get_installs_metric(day_metric)
-                    metric.video_plays = get_video_plays_metric(day_metric)
-                end
-            end
-        rescue StandardError => e
-            p e 
-            p "something went wrong"
-        end 
-    end
-
-    def extract_and_save_ad_metrics(day_wise_metrics)
-        begin
-            day_wise_metrics.each do |day_metric|
-                Metric.find_or_create_by(account_id: day_metric["account_id"],campaign_id: day_metric["campaign_id"],adset_id: day_metric["adset_id"], ad_id: day_metric["ad_id"], attr_date: day_metric["date_start"]) do |metric|
+                act_id = Account.where("fb_account_id = '#{day_metric["account_id"]}'").pluck(:id).first
+                cam_id = Campaign.where("fb_campaign_id = '#{day_metric["campaign_id"]}'").pluck(:id).first
+                adset_id = Adset.where("fb_adset_id = '#{day_metric["adset_id"]}'").pluck(:id).first
+                Metric.find_or_create_by(account_id: act_id,campaign_id: cam_id,adset_id: adset_id, ad_id: pk, attr_date: day_metric["date_start"]) do |metric|
                     metric.all_clicks = day_metric["clicks"]
                     metric.all_ctr = day_metric["ctr"]
                     metric.link_clicks = day_metric["inline_link_clicks"]
@@ -457,22 +466,22 @@ module FacebookModule
                 accounts.each do |account|
                     account_id = account["fb_account_string"]
                     fk_account_id = account["id"]
-                    # p "starting for #{fk_account_id}, #{account_id}"
+                    p "starting for #{fk_account_id}, #{account_id}"
                     response = get_metrics("account", account_id, "account_id")
                     # p "=====>" , response
                     if response.class == Hash && response.key?('data') && response["data"] != nil
-                        data = extract_and_save_account_metrics(response["data"])
-                        # p "================================>>>>>>>>>> day count = #{response["data"].size}"
+                        data = extract_and_save_account_metrics(response["data"], fk_account_id)
+                        p "================================>>>>>>>>>> day count = #{response["data"].size}"
                     else 
-                        # p "No metrics for account #{account_id}"
+                        p "No metrics for account #{account_id}"
                     end
-                    # p "ending for #{fk_account_id}, #{account_id}"
+                    p "ending for #{fk_account_id}, #{account_id}"
                 end
             end 
-            # p "Successfully fetched account metrics"
+            p "Successfully fetched account metrics"
         rescue StandardError => error
             p "=========>", error
-            # p "Failed to fetched account metrics"
+            p "Failed to fetched account metrics"
         end
     end
 
@@ -482,22 +491,22 @@ module FacebookModule
                 campaigns.each do |campaign|
                     campaign_id = campaign["fb_campaign_id"]
                     fk_campaign_id = campaign["id"]
-                    # p "starting for #{fk_campaign_id}, #{campaign_id}"
+                    p "starting for #{fk_campaign_id}, #{campaign_id}"
                     response = get_metrics("campaign", campaign_id, "account_id, campaign_id")
                     # p "=====>" , response
                     if response.class == Hash && response.key?('data') && response["data"] != nil
-                        data = extract_and_save_campaign_metrics(response["data"])
-                        # p "================================>>>>>>>>>> day count = #{response["data"].size}"
+                        data = extract_and_save_campaign_metrics(response["data"], fk_campaign_id)
+                        p "================================>>>>>>>>>> day count = #{response["data"].size}"
                     else 
-                        # p "No metrics for campaign #{campaign_id}"
+                        p "No metrics for campaign #{campaign_id}"
                     end
-                    # p "ending for #{fk_campaign_id}, #{campaign_id}"
+                    p "ending for #{fk_campaign_id}, #{campaign_id}"
                 end
             end 
-            # p "Successfully fetched campaign metrics"
+            p "Successfully fetched campaign metrics"
         rescue StandardError => error
             p "=========>", error
-            # p "Failed to fetched campaign metrics"
+            p "Failed to fetched campaign metrics"
         end
     end
 
@@ -511,7 +520,7 @@ module FacebookModule
                     response = get_metrics("adset", adset_id, "account_id, campaign_id, adset_id")
                     p "=====>" , response
                     if response.class == Hash && response.key?('data') && response["data"] != nil
-                        data = extract_and_save_adset_metrics(response["data"])
+                        data = extract_and_save_adset_metrics(response["data"], fk_adset_id)
                         p "================================>>>>>>>>>> day count = #{response["data"].size}"
                     else 
                         p "No metrics for adset #{adset_id}"
@@ -528,7 +537,7 @@ module FacebookModule
 
     def fetch_all_ads_metrics
         begin
-            Ad.in_batches.each do |ads|
+            Ad.where(:id => 0..10000).in_batches.each do |ads|
                 ads.each do |ad|
                     ad_id = ad["fb_ad_id"]
                     fk_ad_id = ad["id"]
@@ -536,7 +545,7 @@ module FacebookModule
                     response = get_metrics("ad", ad_id, "account_id, campaign_id, adset_id, ad_id")
                     p "=====>" , response
                     if response.class == Hash && response.key?('data') && response["data"] != nil
-                        data = extract_and_save_ad_metrics(response["data"])
+                        data = extract_and_save_ad_metrics(response["data"], fk_ad_id)
                         p "================================>>>>>>>>>> day count = #{response["data"].size}"
                     else 
                         p "No metrics for ad #{ad_id}"

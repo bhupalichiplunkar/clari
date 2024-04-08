@@ -1,4 +1,5 @@
 import {
+  Button,
   Divider,
   Flex,
   FloatButton,
@@ -26,6 +27,7 @@ const Dashboard = ({ user, setUserAuthDetails }) => {
     setUserAuthDetails(null);
     history.push("/login");
   };
+
   const { search } = useLocation();
   const { dataLevel } = useParams();
   const [loading, setLoading] = useState(false);
@@ -129,6 +131,20 @@ const Dashboard = ({ user, setUserAuthDetails }) => {
         <>
           <h3> Hello {user.email}</h3>
           <Divider />
+          <Space style={{ margin: 32 }}>
+            <Button
+              style={{ margin: 16 }}
+              onClick={() => history.push("/upload-csv")}
+            >
+              Upload CSV
+            </Button>
+            <Button
+              style={{ margin: 16 }}
+              onClick={() => history.push("/query")}
+            >
+              Query Data
+            </Button>
+          </Space>
           <Radio.Group value={level} onChange={setDataLevel}>
             <Radio.Button value="accounts">Accounts</Radio.Button>
             <Radio.Button value="campaigns">Campaigns</Radio.Button>

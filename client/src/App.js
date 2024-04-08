@@ -5,6 +5,9 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Registration from "./pages/Registration";
 import { useState } from "react";
+import UploadCSV from "./pages/UploadCSV";
+import Report from "./pages/Report";
+import Query from "./pages/Query";
 
 const store = createStore();
 
@@ -37,11 +40,11 @@ function App() {
         theme={{
           token: {
             // Seed Token
-            colorPrimary: "#00b96b",
+            // colorPrimary: "#00b96b",
             borderRadius: 2,
 
             // Alias Token
-            colorBgContainer: "#f6ffed",
+            // colorBgContainer: "#f6ffed",
           },
         }}
       >
@@ -86,6 +89,21 @@ function App() {
                   setUserAuthDetails={setUserAuthDetails}
                 />
               )}
+            />
+            <Route
+              path="/upload-csv"
+              exact
+              render={(props) => <UploadCSV {...props} user={appState.user} />}
+            />
+            <Route
+              path="/report"
+              exact
+              render={(props) => <Report {...props} user={appState.user} />}
+            />
+            <Route
+              path="/query"
+              exact
+              render={(props) => <Query {...props} user={appState.user} />}
             />
           </Switch>
         </BrowserRouter>

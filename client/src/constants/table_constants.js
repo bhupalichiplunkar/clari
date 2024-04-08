@@ -156,3 +156,41 @@ export const TABLE_COLUMN = {
   adsets: ADSET_COLUMNS,
   ads: ADS_COLUMNS,
 };
+
+export const QUERY_CONSTANT_COLUMNS = [
+  {
+    title: "Id",
+    dataIndex: "id",
+    key: "id",
+    width: 65,
+    fixed: "left",
+  },
+  {
+    title: "Account",
+    dataIndex: "account_name",
+    key: "account_name",
+    width: 100,
+    fixed: "left",
+  },
+  {
+    title: "Campaign",
+    dataIndex: "campaign_name",
+    key: "campaign_name",
+    width: 100,
+    fixed: "left",
+  },
+  {
+    title: "Adset",
+    dataIndex: "adset_name",
+    key: "adset_name",
+    width: 100,
+    fixed: "left",
+  },
+  {
+    title: "Ad",
+    dataIndex: "ad_name",
+    key: "ad_name",
+    width: 100,
+    fixed: "left",
+  },
+];

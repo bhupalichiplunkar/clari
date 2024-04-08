@@ -48,6 +48,16 @@ Rails.application.routes.draw do
 
   get "fetch_metrics/:level/:id", to: "facebook#fetch_metrics"
 
+  post 'upload-csv', to: 'metrics#upload_csv'
+
+  get 'query/drop-down-data', to: 'metrics#fetch_table_wise_column_names'
+
+  get 'query/metric-names', to: 'metrics#fetch_metric_names'
+
+  post 'query/autocomplete', to: 'metrics#get_dimension_or_metric_values'
+
+  post 'query/get-data', to: 'metrics#query_data'
+
   get '*path',
       to: 'fallback#index',
       constraints: ->(req) { !req.xhr? && req.format.html? }
